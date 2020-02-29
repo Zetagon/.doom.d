@@ -26,8 +26,8 @@
         link)
     (with-current-buffer original-buffer
       (with-current-buffer (find-file-noselect file)
+        (setq link (concat "[[" (buffer-file-name) "]["
+                           (file-name-base (buffer-file-name)) "]]"))
         (goto-char (point-max))
         (insert backlink))
-      ;; (insert link)
-      ;; TODO
-      )))
+      (insert link))))
