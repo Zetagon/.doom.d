@@ -18,15 +18,10 @@
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
   (with-current-buffer original-buffer
-    (let ((file-name (buffer-file-name original-buffer))
-          (original-buffer-marker (point-marker))
-          (id (org-id-get-create)))
+    (let ((backlink (concat "[[" (if (org-before-first-heading-p)
+                                     (buffer-file-name original-buffer)
+                                   (concat "id:" (org-id-get-create)))
+                            "]]")))
       (with-current-buffer (find-file-noselect file)
         (goto-char (point-max))
-        (if (org-before-first-heading-p)
-            (org-insert-link nil original-buffer-marker)
-          (insert
-           (concat
-            "[[id:"
-            id
-            "]]")))))))
+        (insert backlink)))))
