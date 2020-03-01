@@ -19,8 +19,32 @@
            (list (concat "[?] " helm-pattern))))
        :action (helm-make-actions "Create Link"
                                   (lambda (file)
-                                    (message (file-name-base file))
-                                    (zettelkasten-create-link file original-buffer)))))))
+                                    (if (s-starts-with? "[?] " file)
+                                        (progn
+                                          (zettelkasten-create-link
+                                           (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))
+                                           original-buffer))
+                                      (zettelkasten-create-link file original-buffer))))))))
+
+(defun zettelkasten-generate-file-name (name)
+  (interactive)
+  (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
+
+(defcustom zettelkasten-id-format "%Y-%m-%d-%H%M"
+  "Format used when generating zettelkasten IDs.
+
+Be warned: the regexp to find IDs is set separately.
+If you change this value, set `zettelkasten-id-regex' so that
+the IDs can be found.
+
+Check the documentation of the `format-time-string'
+function to see which placeholders can be used."
+  :type 'string
+  :group 'zettelkasten)
+(defun zettelkasten-generate-id ()
+  "Generate an ID in the format of `zettelkasten-id-format'."
+  (format-time-string zettelkasten-id-format))
+
 
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
