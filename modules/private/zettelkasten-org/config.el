@@ -8,12 +8,19 @@
   (interactive)
   (let ((original-buffer (current-buffer)))
     (helm
-     :sources (helm-build-sync-source "Zettelkasten"
-                :candidates
-                (lambda () (directory-files zettelkasten-directory))
-                :action (helm-make-actions "Create Link"
-                                           (lambda (file)
-                                             (zettelkasten-create-link file original-buffer)))))))
+     :sources
+     (helm-build-sync-source "Zettelkasten"
+       :candidates
+       (lambda ()  (directory-files zettelkasten-directory))
+       :filtered-candidate-transformer
+       (lambda (cand-list source)
+         (if cand-list
+             cand-list
+           (list (concat "[?] " helm-pattern))))
+       :action (helm-make-actions "Create Link"
+                                  (lambda (file)
+                                    (message (file-name-base file))
+                                    (zettelkasten-create-link file original-buffer)))))))
 
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
