@@ -49,17 +49,17 @@ function to see which placeholders can be used."
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
   (let ((backlink (concat "\n[[" (if (org-before-first-heading-p)
-                                     (buffer-file-name original-buffer)
+                                     (my/buffer-file-name original-buffer)
                                  (concat "id:" (org-id-get-create)))
                           "]["
                           (my/if-nil-default (org-get-heading nil nil nil nil)
-                                             (file-name-base (buffer-file-name original-buffer)))
+                                             (file-name-base (my/buffer-file-name original-buffer)))
                           "]]\n"))
         link)
     (with-current-buffer original-buffer
       (with-current-buffer (find-file-noselect file)
-        (setq link (concat "[[" (buffer-file-name) "]["
-                           (file-name-base (buffer-file-name)) "]]"))
+        (setq link (concat "[[" (my/buffer-file-name) "]["
+                           (file-name-base (my/buffer-file-name)) "]]"))
         (goto-char (point-min))
         (unless
             (re-search-forward (concat "^\\*+[ \t]+" (regexp-quote zettelkasten-referenced-section) "[ \t]*$")
@@ -72,6 +72,11 @@ function to see which placeholders can be used."
         (when (eobp) (insert "\n"))
         (insert backlink))
       (insert link))))
+
+
+(defun my/buffer-file-name (&optional buffer)
+  (buffer-file-name (buffer-base-buffer buffer)))
+
 (defun my/if-nil-default (x default)
   (if x
       x
