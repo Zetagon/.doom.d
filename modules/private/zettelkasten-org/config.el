@@ -49,10 +49,11 @@ function to see which placeholders can be used."
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
   (let ((backlink (concat "\n[[" (if (org-before-first-heading-p)
-                                   (buffer-file-name original-buffer)
+                                     (buffer-file-name original-buffer)
                                  (concat "id:" (org-id-get-create)))
                           "]["
-                          (org-get-heading nil nil nil nil)
+                          (my/if-nil-default (org-get-heading nil nil nil nil)
+                                             (file-name-base (buffer-file-name original-buffer)))
                           "]]\n"))
         link)
     (with-current-buffer original-buffer
@@ -66,8 +67,12 @@ function to see which placeholders can be used."
                                'move-to-end)
           (insert (concat "* " zettelkasten-referenced-section "\n")))
         (outline-next-heading)
-        (previous-line)
+        (previous-line 1)
         (goto-char (line-end-position))
         (when (eobp) (insert "\n"))
         (insert backlink))
       (insert link))))
+(defun my/if-nil-default (x default)
+  (if x
+      x
+    default))
