@@ -67,7 +67,7 @@ function to see which placeholders can be used."
                                'move-to-end)
           (insert (concat "* " zettelkasten-referenced-section "\n")))
         (outline-next-heading)
-        (previous-line 1)
+        (forward-line -1)
         (goto-char (line-end-position))
         (when (eobp) (insert "\n"))
         (insert backlink))
