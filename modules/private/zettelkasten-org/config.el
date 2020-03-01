@@ -3,6 +3,7 @@
 (defvar zettelkasten-directory  "~/org/references/notes/"
   "FIXME")
 
+(defvar zettelkasten-referenced-section "Referenced in")
 
 (defun zettelkasten-insert-link ()
   (interactive)
@@ -27,7 +28,6 @@
                                       (zettelkasten-create-link file original-buffer))))))))
 
 (defun zettelkasten-generate-file-name (name)
-  (interactive)
   (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
 
 (defcustom zettelkasten-id-format "%Y-%m-%d-%H%M"
@@ -48,17 +48,26 @@ function to see which placeholders can be used."
 
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
-  (let ((backlink (concat "[[" (if (org-before-first-heading-p)
+  (let ((backlink (concat "\n[[" (if (org-before-first-heading-p)
                                    (buffer-file-name original-buffer)
                                  (concat "id:" (org-id-get-create)))
                           "]["
                           (org-get-heading nil nil nil nil)
-                          "]]"))
+                          "]]\n"))
         link)
     (with-current-buffer original-buffer
       (with-current-buffer (find-file-noselect file)
         (setq link (concat "[[" (buffer-file-name) "]["
                            (file-name-base (buffer-file-name)) "]]"))
-        (goto-char (point-max))
+        (goto-char (point-min))
+        (unless
+            (re-search-forward (concat "^\\*+[ \t]+" (regexp-quote zettelkasten-referenced-section) "[ \t]*$")
+                               nil
+                               'move-to-end)
+          (insert (concat "* " zettelkasten-referenced-section "\n")))
+        (outline-next-heading)
+        (previous-line)
+        (goto-char (line-end-position))
+        (when (eobp) (insert "\n"))
         (insert backlink))
       (insert link))))
