@@ -49,7 +49,7 @@
   (interactive)
   (find-file (pop zettelkasten-new-zettel-stack)))
 
-(defcustom zettelkasten-id-format "%Y-%m-%d-%H%M"
+(defcustom zettelkasten-id-format "%Y-%m-%d-%H%M-%S"
   "Format used when generating zettelkasten IDs.
 
 Be warned: the regexp to find IDs is set separately.
