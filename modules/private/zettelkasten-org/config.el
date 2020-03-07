@@ -33,7 +33,14 @@
                                             (zettelkasten-create-link
                                              new-file
                                              original-buffer)))
-                                      (zettelkasten-create-link file original-buffer))))))))
+                                      (zettelkasten-create-link file original-buffer)))
+                                  "Begin a sidetrack"
+                                  (lambda (file)
+                                    (add-to-list 'zettelkasten-new-zettel-stack (original-buffer))
+                                    (zettelkasten-create-link
+                                     new-file
+                                     original-buffer)
+                                    (find-file file)))))))
 
 (defun zettelkasten-generate-file-name (name)
   (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
