@@ -52,7 +52,14 @@
       (zettelkasten-create-link file original-buffer))))
 
 (defun zettelkasten-generate-file-name (name)
-  (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
+  (concat (zettelkasten-generate-id) "-"
+          (zettelkasten--normalize-file-name
+           (read-string "Create new zettel: " name nil name))
+          ".org"))
+
+(defun zettelkasten--normalize-file-name (name)
+  "Normalize the non-id part of a file name."
+  (s-replace " " "-" (s-trim name)))
 
 (defun zettelkasten-pop-new-file-stack ()
   (interactive)
