@@ -8,10 +8,10 @@
 (defvar zettelkasten-scrapbook-description-prefix "sb:"
   "The prefix to description in backlinks to scrapbook")
 
-(defvar zettelkasten-new-zettel-stack '()
-  "A stack of new zettels that have not been written to yet.")
+(defvar zettelkasten-visit-stack '()
+  "A stack of zettels to be visited either because you have sidetracked or becaues you have a hole to fill in.")
 
-(defun zettelkasten-insert-link ()
+(defun zettelkasten-helm ()
   (interactive)
   (let ((original-buffer (current-buffer)))
     (helm
@@ -20,34 +20,40 @@
        :candidates
        (lambda ()  (directory-files zettelkasten-directory))
        :filtered-candidate-transformer
-       (lambda (cand-list source)
+       #'zettelkasten--helm-filter-transformer
+       :action (helm-make-actions "Create Link"
+                                  #'zettelkasten--create-link
+                                  "Begin a sidetrack"
+                                  #'zettelkasten--begin-sidetrack)))))
+
+(defun zettelkasten--helm-filter-transformer (cand-list source)
          (if cand-list
              cand-list
            (list (concat "[?] " helm-pattern))))
-       :action (helm-make-actions "Create Link"
-                                  (lambda (file)
-                                    (if (s-starts-with? "[?] " file)
-                                        (progn
-                                          (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
-                                            (add-to-list 'zettelkasten-new-zettel-stack new-file)
-                                            (zettelkasten-create-link
-                                             new-file
-                                             original-buffer)))
-                                      (zettelkasten-create-link file original-buffer)))
-                                  "Begin a sidetrack"
-                                  (lambda (file)
-                                    (add-to-list 'zettelkasten-new-zettel-stack (original-buffer))
-                                    (zettelkasten-create-link
-                                     new-file
-                                     original-buffer)
-                                    (find-file file)))))))
+
+(defun zettelkasten--begin-sidetrack (file)
+  (add-to-list 'zettelkasten-visit-stack (original-buffer))
+  (zettelkasten-create-link
+   new-file
+   original-buffer)
+  (find-file file) )
+
+(defun zettelkasten--create-link (file)
+  (if (s-starts-with? "[?] " file)
+      (progn
+        (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
+          (add-to-list 'zettelkasten-visit-stack new-file)
+          (zettelkasten-create-link
+           new-file
+           original-buffer)))
+    (zettelkasten-create-link file original-buffer)))
 
 (defun zettelkasten-generate-file-name (name)
   (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
 
 (defun zettelkasten-pop-new-file-stack ()
   (interactive)
-  (find-file (pop zettelkasten-new-zettel-stack)))
+  (find-file (pop zettelkasten-visit-stack)))
 
 (defcustom zettelkasten-id-format "%Y-%m-%d-%H%M-%S"
   "Format used when generating zettelkasten IDs.
