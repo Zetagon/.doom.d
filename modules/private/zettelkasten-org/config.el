@@ -5,6 +5,8 @@
 
 (defvar zettelkasten-referenced-section "Referenced in")
 
+(defvar zettelkasten-scrapbook-description-prefix "sb:"
+  "The prefix to description in backlinks to scrapbook")
 (defun zettelkasten-insert-link ()
   (interactive)
   (let ((original-buffer (current-buffer)))
@@ -52,8 +54,13 @@ function to see which placeholders can be used."
                                      (my/buffer-file-name original-buffer)
                                  (concat "id:" (org-id-get-create)))
                           "]["
-                          (my/if-nil-default (org-get-heading nil nil nil nil)
-                                             (file-name-base (my/buffer-file-name original-buffer)))
+                          (concat
+                           (when (string-equal
+                                  (file-name-base (my/buffer-file-name original-buffer))
+                                  "scrapbook")
+                             zettelkasten-scrapbook-description-prefix)
+                           (my/if-nil-default (org-get-heading nil nil nil nil)
+                                              (file-name-base (my/buffer-file-name original-buffer))))
                           "]]\n"))
         link)
     (with-current-buffer original-buffer
