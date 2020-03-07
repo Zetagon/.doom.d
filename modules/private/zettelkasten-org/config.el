@@ -22,31 +22,33 @@
        :filtered-candidate-transformer
        #'zettelkasten--helm-filter-transformer
        :action (helm-make-actions "Create Link"
-                                  #'zettelkasten--create-link
+                                  (zettelkasten--create-link original-buffer)
                                   "Begin a sidetrack"
-                                  #'zettelkasten--begin-sidetrack)))))
+                                  (zettelkasten--begin-sidetrack original-buffer))))))
 
 (defun zettelkasten--helm-filter-transformer (cand-list source)
          (if cand-list
              cand-list
            (list (concat "[?] " helm-pattern))))
 
-(defun zettelkasten--begin-sidetrack (file)
-  (add-to-list 'zettelkasten-visit-stack (original-buffer))
-  (zettelkasten-create-link
-   new-file
-   original-buffer)
-  (find-file file) )
+(defun zettelkasten--begin-sidetrack (original-buffer)
+  (lambda (file)
+    (add-to-list 'zettelkasten-visit-stack (original-buffer))
+    (zettelkasten-create-link
+     new-file
+     original-buffer)
+    (find-file file)))
 
-(defun zettelkasten--create-link (file)
-  (if (s-starts-with? "[?] " file)
-      (progn
-        (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
-          (add-to-list 'zettelkasten-visit-stack new-file)
-          (zettelkasten-create-link
-           new-file
-           original-buffer)))
-    (zettelkasten-create-link file original-buffer)))
+(defun zettelkasten--create-link (original-buffer)
+  (lambda (file)
+    (if (s-starts-with? "[?] " file) ;; The create a new file case
+        (progn
+          (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
+            (add-to-list 'zettelkasten-visit-stack new-file)
+            (zettelkasten-create-link
+             new-file
+             original-buffer)))
+      (zettelkasten-create-link file original-buffer))))
 
 (defun zettelkasten-generate-file-name (name)
   (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
