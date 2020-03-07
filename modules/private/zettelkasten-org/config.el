@@ -29,6 +29,7 @@
 (defun zettelkasten--helm-filter-transformer (cand-list source)
          (if cand-list
              cand-list
+           ;; This is the case when there are no candidates left
            (list (concat "[?] " helm-pattern))))
 
 (defun zettelkasten--begin-sidetrack (original-buffer)
