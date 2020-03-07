@@ -7,6 +7,10 @@
 
 (defvar zettelkasten-scrapbook-description-prefix "sb:"
   "The prefix to description in backlinks to scrapbook")
+
+(defvar zettelkasten-new-zettel-stack '()
+  "A stack of new zettels that have not been written to yet.")
+
 (defun zettelkasten-insert-link ()
   (interactive)
   (let ((original-buffer (current-buffer)))
@@ -24,13 +28,19 @@
                                   (lambda (file)
                                     (if (s-starts-with? "[?] " file)
                                         (progn
-                                          (zettelkasten-create-link
-                                           (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))
-                                           original-buffer))
+                                          (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
+                                            (add-to-list 'zettelkasten-new-zettel-stack new-file)
+                                            (zettelkasten-create-link
+                                             new-file
+                                             original-buffer)))
                                       (zettelkasten-create-link file original-buffer))))))))
 
 (defun zettelkasten-generate-file-name (name)
   (concat (zettelkasten-generate-id) "-" (read-string "Create new zettel: " name nil name) ".org"))
+
+(defun zettelkasten-pop-new-file-stack ()
+  (interactive)
+  (find-file (pop zettelkasten-new-zettel-stack)))
 
 (defcustom zettelkasten-id-format "%Y-%m-%d-%H%M"
   "Format used when generating zettelkasten IDs.
