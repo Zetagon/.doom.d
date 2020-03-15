@@ -22,9 +22,7 @@
        :filtered-candidate-transformer
        #'zettelkasten--helm-filter-transformer
        :action (helm-make-actions "Create Link"
-                                  (zettelkasten--create-link original-buffer)
-                                  "Begin a sidetrack"
-                                  (zettelkasten--begin-sidetrack original-buffer))))))
+                                  (zettelkasten--create-link original-buffer))))))
 
 (defun zettelkasten--helm-filter-transformer (cand-list source)
          (if cand-list
@@ -32,29 +30,32 @@
            ;; This is the case when there are no candidates left
            (list (concat "[?] " helm-pattern))))
 
-(defun zettelkasten--begin-sidetrack (original-buffer)
-  (lambda (file)
-    (add-to-list 'zettelkasten-visit-stack (original-buffer))
+(defun zettelkasten-begin-sidetrack (name)
+  (interactive "sZettel Name: ")
+  (add-to-list 'zettelkasten-visit-stack (current-buffer))
+  (let ((new-zettel (zettelkasten-generate-file-name name)))
     (zettelkasten-create-link
-     new-file
-     original-buffer)
-    (find-file file)))
+     new-zettel
+     (current-buffer))
+    (find-file new-zettel)))
 
 (defun zettelkasten--create-link (original-buffer)
   (lambda (file)
     (if (s-starts-with? "[?] " file) ;; The create a new file case
         (progn
-          (let ((new-file (zettelkasten-generate-file-name (cadr (s-split-up-to " " file 1 t)))))
+          (let ((new-file (zettelkasten-prompt-file-name (cadr (s-split-up-to " " file 1 t)))))
             (add-to-list 'zettelkasten-visit-stack new-file)
             (zettelkasten-create-link
              new-file
              original-buffer)))
       (zettelkasten-create-link file original-buffer))))
 
+(defun zettelkasten-prompt-file-name (&optional default-name)
+  (zettelkasten-generate-file-name (read-string "Create new zettel: " default-name nil default-name)))
+
 (defun zettelkasten-generate-file-name (name)
   (concat (zettelkasten-generate-id) "-"
-          (zettelkasten--normalize-file-name
-           (read-string "Create new zettel: " name nil name))
+          (zettelkasten--normalize-file-name name)
           ".org"))
 
 (defun zettelkasten--normalize-file-name (name)
