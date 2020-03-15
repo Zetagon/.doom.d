@@ -47,7 +47,11 @@
        (lambda ()  (directory-files zettelkasten-directory))
        :filtered-candidate-transformer
        #'zettelkasten--helm-filter-transformer
-       :action zettelkasten-current-helm-action-list))))
+       :action (-map (lambda (pair)
+                       (pcase pair
+                         (`(,desc . ,fn)
+                          `(,desc . ,(funcall fn original-buffer)))) )
+                     zettelkasten-current-helm-action-list)))))
 
 (defun zettelkasten-create-link-from-word-at-point ()
   (interactive)
