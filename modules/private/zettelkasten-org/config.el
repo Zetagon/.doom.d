@@ -46,6 +46,10 @@ function to see which placeholders can be used."
 (defvar zettelkasten-current-helm-action-list
   zettelkasten-helm-action-list)
 
+(defvar zettelkasten-prefil-input
+  ""
+  "String to pre-fill the helm prompt with.")
+
 (defun zettelkasten--create-link-action (original-buffer)
   (zettelkasten--insert-link-action original-buffer))
 
@@ -73,6 +77,7 @@ Note: The function type is curried, meaning that the function should return anot
   (interactive)
   (let ((original-buffer (current-buffer)))
     (helm
+     :input zettelkasten-prefil-input
      :sources
      (helm-build-sync-source "Zettelkasten"
        :candidates
@@ -83,12 +88,19 @@ Note: The function type is curried, meaning that the function should return anot
                        (pcase pair
                          (`(,desc . ,fn)
                           `(,desc . ,(funcall fn original-buffer)))) )
-                     zettelkasten-current-helm-action-list)))))
+                     zettelkasten-current-helm-action-list))))
+  (setq zettelkasten-prefil-input ""))
 
 (defun zettelkasten-create-link-from-word-at-point ()
   "Like `zettelkasten-helm` but uses `zettelkasten-link-from-word-action-list` as action list."
   (interactive)
-  (let ((zettelkasten-current-helm-action-list zettelkasten-link-from-word-action-list))
+  (let* ((zettelkasten-current-helm-action-list zettelkasten-link-from-word-action-list)
+         (bound (zettelkasten--get-bounds-of-thing-at-point))
+         (zettelkasten-prefil-input (if bound
+                                        (progn (buffer-substring-no-properties
+                                                (car bound)
+                                                (cdr bound)))
+                                      "")))
     (zettelkasten-helm)))
 
 (defun zettelkasten-begin-sidetrack (name)
@@ -152,12 +164,17 @@ file in ORIGINAL-BUFFER and insert a backlink in chosen file."
   "Normalize the non-id part of a file name. Dont call this on a file name with an ID"
   (s-replace " " "-" (s-trim name)))
 
+(defun zettelkasten--get-bounds-of-thing-at-point ()
+  (if (use-region-p)
+      (cons (region-beginning) (region-end))
+    (bounds-of-thing-at-point 'symbol)))
+
 (defun zettelkasten--delete-word-or-region ()
   "Delete word or region and return the deleted text."
-  (let* ((bounds (if (use-region-p)
-                     (cons (region-beginning) (region-end))
-                   (bounds-of-thing-at-point 'symbol)))
-         (text   (buffer-substring-no-properties (car bounds) (cdr bounds))))
+  (let* ((bounds (zettelkasten--get-bounds-of-thing-at-point))
+         (text   (if bounds
+                     (buffer-substring-no-properties (car bounds) (cdr bounds))
+                   "")))
     (when bounds
       (delete-region (car bounds) (cdr bounds))
       text)))
