@@ -176,7 +176,7 @@ ORIGINAL-BUFFER in FILE.
  If DESCRIPTION is provided use that as description in the link(but not backlink)"
   (let ((backlink (concat "\n[["
                           (if (org-before-first-heading-p)
-                              (file-relative-name (my/buffer-file-name original-buffer))
+                              (concat "./" (file-relative-name (my/buffer-file-name original-buffer)))
                             (concat "id:" (org-id-get-create)))
                           "]["
                           (concat
