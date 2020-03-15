@@ -85,7 +85,7 @@ function to see which placeholders can be used."
 (defun zettelkasten-create-link (file original-buffer)
   "FIXME"
   (let ((backlink (concat "\n[[" (if (org-before-first-heading-p)
-                                     (my/buffer-file-name original-buffer)
+                                     (file-relative-name (my/buffer-file-name original-buffer))
                                  (concat "id:" (org-id-get-create)))
                           "]["
                           (concat
@@ -99,7 +99,7 @@ function to see which placeholders can be used."
         link)
     (with-current-buffer original-buffer
       (with-current-buffer (find-file-noselect file)
-        (setq link (concat "[[" (my/buffer-file-name) "]["
+        (setq link (concat "[[./" (file-relative-name (my/buffer-file-name)) "]["
                            (file-name-base (my/buffer-file-name)) "]]"))
         (goto-char (point-min))
         (unless
