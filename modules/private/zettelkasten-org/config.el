@@ -34,7 +34,7 @@
   (interactive "sZettel Name: ")
   (add-to-list 'zettelkasten-visit-stack (current-buffer))
   (let ((new-zettel (zettelkasten-generate-file-name name)))
-    (zettelkasten-create-link
+    (zettelkasen-insert-link
      new-zettel
      (current-buffer))
     (find-file new-zettel)))
@@ -43,14 +43,14 @@
   (lambda (file)
     (if (s-starts-with? "[?] " file) ;; The create a new file case
         (progn
-          (let ((new-file (zettelkasten-prompt-file-name (cadr (s-split-up-to " " file 1 t)))))
+          (let ((new-file (zettelkasten--prompt-file-name (cadr (s-split-up-to " " file 1 t)))))
             (add-to-list 'zettelkasten-visit-stack new-file)
-            (zettelkasten-create-link
+            (zettelkasen-insert-link
              new-file
              original-buffer)))
-      (zettelkasten-create-link file original-buffer))))
+      (zettelkasen-insert-link file original-buffer))))
 
-(defun zettelkasten-prompt-file-name (&optional default-name)
+(defun zettelkasten--prompt-file-name (&optional default-name)
   (zettelkasten-generate-file-name (read-string "Create new zettel: " default-name nil default-name)))
 
 (defun zettelkasten-generate-file-name (name)
@@ -82,7 +82,7 @@ function to see which placeholders can be used."
   (format-time-string zettelkasten-id-format))
 
 
-(defun zettelkasten-create-link (file original-buffer)
+(defun zettelkasen-insert-link (file original-buffer)
   "FIXME"
   (let ((backlink (concat "\n[[" (if (org-before-first-heading-p)
                                      (file-relative-name (my/buffer-file-name original-buffer))
