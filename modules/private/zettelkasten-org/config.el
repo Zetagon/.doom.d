@@ -107,6 +107,10 @@ Note: The function type is curried, meaning that the function should return anot
   (when zettelkasten-visit-stack
     (find-file (pop zettelkasten-visit-stack))))
 
+(defun zettelkasten-new-zettel (name)
+  (interactive "sZettel Name: ")
+  (find-file (concat zettelkasten-directory (zettelkasten-generate-file-name name))))
+
 ;; ---------------------------------------------------
 ;; -------------- Helper Functions --------------
 ;; ---------------------------------------------------
