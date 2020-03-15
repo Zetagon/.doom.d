@@ -98,9 +98,10 @@
   "Normalize the non-id part of a file name."
   (s-replace " " "-" (s-trim name)))
 
-(defun zettelkasten-pop-new-file-stack ()
+(defun zettelkasten-pop-visit-stack ()
   (interactive)
-  (find-file (pop zettelkasten-visit-stack)))
+  (when zettelkasten-visit-stack
+    (find-file (pop zettelkasten-visit-stack))))
 
 (defun zettelkasten--delete-word-or-region ()
   "Delete word or region and return the deleted text."
