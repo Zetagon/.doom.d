@@ -1,5 +1,20 @@
 ;;; private/zettelkasten-org/config.el -*- lexical-binding: t; -*-
 
+;; ---------------------------------------------------
+;; -------------------- Variables --------------------
+;; ---------------------------------------------------
+(defcustom zettelkasten-id-format "%Y-%m-%d-%H%M-%S"
+  "Format used when generating zettelkasten IDs.
+
+Be warned: the regexp to find IDs is set separately.
+If you change this value, set `zettelkasten-id-regex' so that
+the IDs can be found.
+
+Check the documentation of the `format-time-string'
+function to see which placeholders can be used."
+  :type 'string
+  :group 'zettelkasten)
+
 (defvar zettelkasten-directory  "~/org/references/notes/"
   "The directory where the zettelkasten resides")
 
@@ -41,6 +56,10 @@
       (funcall (zettelkasten--insert-link-action original-buffer word)
                file))))
 
+;; ---------------------------------------------------
+;; -------------- Interactive Functions --------------
+;; ---------------------------------------------------
+
 (defun zettelkasten-helm ()
   "The main entry point for the package. Choose a file and an action to execute on that file.
 
@@ -72,16 +91,6 @@ Note: The function type is curried, meaning that the function should return anot
   (let ((zettelkasten-current-helm-action-list zettelkasten-link-from-word-action-list))
     (zettelkasten-helm)))
 
-
-(defun zettelkasten--helm-filter-transformer (cand-list source)
-  "A transformer for helm. Use the text the user has typed in if there are no other candidates left.
-
-Note: To use this function no candidate is allowed to start with \"[?] \""
-  (if cand-list
-      cand-list
-    ;; This is the case when there are no candidates left
-    (list (concat "[?] " helm-pattern))))
-
 (defun zettelkasten-begin-sidetrack (name)
   "Insert a link to a new zettel and go to that newly created zettel."
   (interactive "sZettel Name: ")
@@ -91,6 +100,25 @@ Note: To use this function no candidate is allowed to start with \"[?] \""
      new-zettel
      (current-buffer))
     (find-file new-zettel)))
+
+(defun zettelkasten-pop-visit-stack ()
+  "Pop and goto the file at the top of the visit stack"
+  (interactive)
+  (when zettelkasten-visit-stack
+    (find-file (pop zettelkasten-visit-stack))))
+
+;; ---------------------------------------------------
+;; -------------- Helper Functions --------------
+;; ---------------------------------------------------
+
+(defun zettelkasten--helm-filter-transformer (cand-list source)
+  "A transformer for helm. Use the text the user has typed in if there are no other candidates left.
+
+Note: To use this function no candidate is allowed to start with \"[?] \""
+  (if cand-list
+      cand-list
+    ;; This is the case when there are no candidates left
+    (list (concat "[?] " helm-pattern))))
 
 (defun zettelkasten--insert-link-action (original-buffer &optional description)
   "An action for `zettelkasten-helm`. Insert a link to chosen
@@ -120,12 +148,6 @@ file in ORIGINAL-BUFFER and insert a backlink in chosen file."
   "Normalize the non-id part of a file name. Dont call this on a file name with an ID"
   (s-replace " " "-" (s-trim name)))
 
-(defun zettelkasten-pop-visit-stack ()
-  "Pop and goto the file at the top of the visit stack"
-  (interactive)
-  (when zettelkasten-visit-stack
-    (find-file (pop zettelkasten-visit-stack))))
-
 (defun zettelkasten--delete-word-or-region ()
   "Delete word or region and return the deleted text."
   (let* ((bounds (if (use-region-p)
@@ -136,17 +158,8 @@ file in ORIGINAL-BUFFER and insert a backlink in chosen file."
       (delete-region (car bounds) (cdr bounds))
       text)))
 
-(defcustom zettelkasten-id-format "%Y-%m-%d-%H%M-%S"
-  "Format used when generating zettelkasten IDs.
 
-Be warned: the regexp to find IDs is set separately.
-If you change this value, set `zettelkasten-id-regex' so that
-the IDs can be found.
 
-Check the documentation of the `format-time-string'
-function to see which placeholders can be used."
-  :type 'string
-  :group 'zettelkasten)
 (defun zettelkasten-generate-id ()
   "Generate an ID in the format of `zettelkasten-id-format'."
   (format-time-string zettelkasten-id-format))
