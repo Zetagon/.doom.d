@@ -1,7 +1,7 @@
 ;;; private/zettelkasten-org/config.el -*- lexical-binding: t; -*-
 
 ;; ---------------------------------------------------
-;; -------------------- Variables --------------------
+;;; -------------------- Variables --------------------
 ;; ---------------------------------------------------
 (after! helm
   (defcustom zettelkasten-id-format "%Y-%m-%d-%H%M-%S"
@@ -62,7 +62,7 @@ function to see which placeholders can be used."
                  file))))
 
   ;; ---------------------------------------------------
-  ;; -------------- Interactive Functions --------------
+;;; -------------- Interactive Functions --------------
   ;; ---------------------------------------------------
 
   (defun zettelkasten-helm ()
@@ -114,6 +114,10 @@ Note: The function type is curried, meaning that the function should return anot
        (current-buffer))
       (find-file new-zettel)))
 
+  (defun zettelkasten-push-visit-stack ()
+    (interactive)
+    (push (current-buffer) zettelkasten-visit-stack))
+
   (defun zettelkasten-pop-visit-stack ()
     "Pop and goto the file at the top of the visit stack"
     (interactive)
@@ -125,7 +129,7 @@ Note: The function type is curried, meaning that the function should return anot
     (find-file (concat zettelkasten-directory (zettelkasten-generate-file-name name))))
 
   ;; ---------------------------------------------------
-  ;; -------------- Helper Functions --------------
+;;; -------------- Helper Functions --------------
   ;; ---------------------------------------------------
 
   (defun zettelkasten--helm-filter-transformer (cand-list source)
