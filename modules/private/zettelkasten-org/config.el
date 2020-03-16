@@ -239,10 +239,71 @@ ORIGINAL-BUFFER in FILE.
         x
       default))
 
-  (defun zettelkasten--get-title ()
+  (defun zettelkasten--get-title (&optional name)
     (replace-regexp-in-string "-" " "
                               (replace-regexp-in-string
                                "[0-9]*-[0-9]*-[0-9]*-[0-9]*-[0-9]*" ""
-                               (capitalize (file-name-base buffer-file-name)))))
+                               (capitalize (if name
+                                               name
+                                             (file-name-base buffer-file-name))))))
 
-)
+  )
+;;;; graphing stuff
+
+(defvar zettelkasten--graph-from-links
+  '())
+(defvar zettelkasten--graph-to-links
+  '())
+
+(defvar zettelkasten-graph-output-file "/tmp/graph.org")
+
+(defun zettelkasten--goto-next-link ()
+  (interactive)
+  (re-search-forward "\\[\\[./\\(.*?\\)\\]\\[.*?\\]\\]" nil t))
+
+(defun zettelkasten-push-all-links ()
+  (with-current-buffer (current-buffer)
+    (goto-char (point-min))
+    (let* ((referenced-in-pos (search-forward (concat "* "
+                                                      zettelkasten-referenced-section) nil t))
+           (tmp (goto-char (point-min)))
+           (result-pos (zettelkasten--goto-next-link)))
+      (while result-pos
+        (push (match-string-no-properties 1)
+              (if (and referenced-in-pos (> result-pos referenced-in-pos))
+                  zettelkasten--graph-to-links
+                zettelkasten--graph-from-links))
+        (setq result-pos (zettelkasten--goto-next-link))))))
+
+(defun zettelkasten-visit-breadth-first (&optional limit)
+  (interactive)
+  (let ((graph-output-file (find-file-noselect zettelkasten-graph-output-file))
+        (from-buffer-name (zettelkasten--get-title
+                           (file-name-base (buffer-file-name (current-buffer)))))
+        (limit (or limit 3)))
+    (when (> limit 0)
+      (with-current-buffer graph-output-file (insert "
+#+BEGIN_SRC dot :file ./operatingsystems.pdf :cmdline -Kfdp -Tpdf
+digraph {\n"))
+      (setq zettelkasten--graph-from-links nil)
+      (setq zettelkasten--graph-to-links nil)
+      (zettelkasten-push-all-links)
+      (-each zettelkasten--graph-from-links
+        (lambda (x)
+          (with-current-buffer graph-output-file
+            (insert (format
+                     "\"%s\" -> {\"%s\"}\n"
+                     from-buffer-name
+                     (s-replace ".org" "" (zettelkasten--get-title x)))))))
+      (-each zettelkasten--graph-to-links
+        (lambda (x)
+          (with-current-buffer graph-output-file
+            (insert (format
+                     "\"%s\" -> {\"%s\"}\n"
+                     (s-replace ".org" "" (zettelkasten--get-title x))
+                     from-buffer-name)))))
+      (with-current-buffer graph-output-file (insert "}
+#+END_SRC
+"))
+      (find-file (pop zettelkasten--graph-from-links))
+      (zettelkasten-visit-breadth-first (- limit 1)))))
