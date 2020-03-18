@@ -98,9 +98,9 @@ Note: The function type is curried, meaning that the function should return anot
     (let* ((zettelkasten-current-helm-action-list zettelkasten-link-from-word-action-list)
            (bound (zettelkasten--get-bounds-of-thing-at-point))
            (zettelkasten-prefil-input (if bound
-                                          (progn (buffer-substring-no-properties
-                                                  (car bound)
-                                                  (cdr bound)))
+                                          (downcase (buffer-substring-no-properties
+                                                       (car bound)
+                                                       (cdr bound)))
                                         "")))
       (zettelkasten-helm)))
 
